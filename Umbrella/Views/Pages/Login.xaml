@@ -1,0 +1,25 @@
+﻿<Page x:Class="Umbrella.Views.Pages.Login"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:Umbrella.Views.Pages"
+      xmlns:components="clr-namespace:Umbrella.Components"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="Login">
+
+    <Grid>
+
+        <StackPanel VerticalAlignment="Center" Width="250">
+            <TextBlock Text="Авторизация" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0, 0, 0, 10" />
+            <TextBlock Text="Имя пользователя" Margin="0 1.5" />
+            <TextBox Margin="0 1.5" Padding="2" Text="{Binding Username}" />
+            <TextBlock Text="Пароль" Margin="0 1.5" />
+            <components:BindablePasswordBox Margin="0 1.5" Password="{Binding Password}" />
+            <Button Content="Войти" Margin="0 1.5" Padding="2" Command="{Binding LoginCommand}"></Button>
+            <TextBlock Foreground="Red" TextWrapping="Wrap" Margin="0, 10" Text="{Binding LoginResult}"></TextBlock>
+        </StackPanel>
+
+    </Grid>
+</Page>
