@@ -11,9 +11,10 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Windows;
 using System.Windows.Controls;
+using Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Umbrella.Properties;
+using Settings = Umbrella.Properties.Settings;
 
 namespace Umbrella.Utils
 {
@@ -137,7 +138,7 @@ namespace Umbrella.Utils
             }
             catch (Exception ex)
             {
-                MessageBox.Show("SendGet: " + ex.Message);
+                Log.Write(Log.Level.Error, "SendGet: " + ex.Message);
                 return new Response();
             }
         }
@@ -162,9 +163,8 @@ namespace Umbrella.Utils
             }
             catch (Exception ex)
             {
-                MessageBox.Show("IsAuth: " + ex.Message);
+                Log.Write(Log.Level.Error, "IsAuth: " + ex.Message);
                 return false;
-
             }
         }
     }

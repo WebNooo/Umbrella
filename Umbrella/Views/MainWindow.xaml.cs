@@ -1,21 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Linq;
-using System.Resources;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Forms;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Umbrella.ViewModel;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.Forms.MessageBox;
@@ -30,6 +17,7 @@ namespace Umbrella
         private NotifyIcon notify;
         public MainWindow()
         {
+            //var app = new Core.App();
             InitializeComponent();
             DataContext = new MainWindowVm();
             notify = new NotifyIcon
@@ -41,6 +29,7 @@ namespace Umbrella
             notify.Click += (s, e) =>
             {
                 notify.Visible = false;
+                //Visibility = Visibility.Visible;
                 Show();
             };
 

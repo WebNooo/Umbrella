@@ -118,5 +118,17 @@ namespace Umbrella.Properties {
                 this["auto_start"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool CompareDateTable {
+            get {
+                return ((bool)(this["CompareDateTable"]));
+            }
+            set {
+                this["CompareDateTable"] = value;
+            }
+        }
     }
 }

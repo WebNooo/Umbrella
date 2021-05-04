@@ -12,13 +12,14 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using Core;
 using DeviceId;
 using PropertyChanged;
 using ReactiveUI;
 using Umbrella.Interfaces;
 using Umbrella.Model;
-using Umbrella.Properties;
 using Umbrella.Utils;
+using Settings = Umbrella.Properties.Settings;
 
 namespace Umbrella.ViewModel
 {
@@ -27,7 +28,7 @@ namespace Umbrella.ViewModel
     {
         public Action<string> UpdateTitle { get; set; }
 
-        public string Version = "12";
+        public string Version = "18";
 
         public class TimeTableItem
         {
@@ -40,6 +41,17 @@ namespace Umbrella.ViewModel
             public ReactiveCommand<int, Unit> Command { get; set; }
         }
 
+        public bool CompareDateTable { 
+            get  => Settings.Default.CompareDateTable; 
+            set {
+                Settings.Default.CompareDateTable = value;
+                Settings.Default.Save();
+            } 
+        }
+
+        public int PromocodeCount { get; set; }
+        public int PromocodeBecameCount { get; set; }
+        public int PromocodeAlreadyActive { get; set; }
         public Action<int> LoginStatus { get; set; }
         public string ActivationStateText { get; set; } = "Начать активацию";
         public string EndActivation { get; set; }
@@ -48,6 +60,8 @@ namespace Umbrella.ViewModel
         public ICollectionView SomeCollection { get; set; } = CollectionViewSource.GetDefaultView(TimeTableData);
         public MainVM()
         {
+
+            Log.Write(Log.Level.Success, "Program is running...");
             try
             {
                 UserData = new User();
@@ -85,7 +99,7 @@ namespace Umbrella.ViewModel
             }
             catch (Exception e)
             {
-                MessageBox.Show("MainVM: " + e.Message);
+                Log.Write(Log.Level.Error, "MainVM: " + e.Message);
             }
         }
         public void TimeTable()
@@ -94,18 +108,47 @@ namespace Umbrella.ViewModel
             {
                 Application.Current.Dispatcher.Invoke(async () =>
                 {
-                    var date = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 5, 59, 20);
+                    var date = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 5, 59, 0);
 
 
-                    TimeTableData.Clear();
+                    
 
                     var current = true;
 
-                    int promocodeCount = 59;
-
-                    for (var i = 0; i <= promocodeCount; i++)
+                    if (xfToken == null)
                     {
-                        if (i > 0) date = date.AddSeconds((18 * 60 / (float)promocodeCount) * 60);
+                        var uc = await RequestManager.SendGet(RequestManager.Api.UcZone, "", true);
+                        var regexXfToken = new Regex("csrf: '([a-z,0-9]+)',").Match(uc.DataHtml);
+
+                        xfToken = regexXfToken.Groups[1].Value;
+                    }
+
+                    var result = await RequestManager.SendGet(RequestManager.Api.UcZone,
+    $"cheat-statuses/games/DotA2/load-promocode?_xfRequestUri=/&_xfWithData=1&_xfToken={xfToken}&_xfResponseType=json",
+    true);
+                    var resultClear = ((string)result.Data["html"]?["content"])?.Replace("\t", "").Replace("\n", "");
+
+                    var countPromo = Regex.Match(resultClear ?? string.Empty,
+                        "<li class=\"item\">Промокодов сегодня будет сгенерировано: ([0-9]+)</li>",
+                        RegexOptions.IgnoreCase).Groups[1].Value;
+
+                    var countAlreadyPromo = Regex.Match(resultClear ?? string.Empty,
+                        "<li class=\"item\">Уже сгенерировано: ([0-9]+)</li>",
+                        RegexOptions.IgnoreCase).Groups[1].Value;
+
+
+
+                    PromocodeAlreadyActive = !int.TryParse(countAlreadyPromo, out var pCA) ? 0 : pCA;
+                    PromocodeCount = !int.TryParse(countPromo, out var pC) ? 59 : pC;
+                    PromocodeBecameCount = PromocodeCount - PromocodeAlreadyActive;
+
+                    TimeTableData.Clear();
+
+                    for (var i = 0; i < PromocodeCount; i++)
+                    {
+                        //test if, check start activation time
+                        //if (i > 0)  date = date.AddSeconds((18 * 60 / (float)PromocodeCount) * 60);
+                        date = date.AddSeconds((18 * 60 / (float)PromocodeCount) * 60);
                         var selected = false;
 
                         var color = new SolidColorBrush(Color.FromRgb(28, 157, 60));
@@ -129,7 +172,7 @@ namespace Umbrella.ViewModel
                         TimeTableData.Add(new TimeTableItem
                         {
                             Time = date,
-                            Text = $"{date.Hour:D2}:{date.Minute:D2}:{date.Second:D2}",
+                            Text = $"{date.Hour:D2}:{date.Minute:D2}",
                             Background = color,
                             Selected = !selected,
                             skip = date > DateTime.Now,
@@ -146,7 +189,7 @@ namespace Umbrella.ViewModel
             }
             catch (Exception e)
             {
-                MessageBox.Show("TimeTable: " + e.Message);
+                Log.Write(Log.Level.Error, "TimeTable: " + e.Message);
             }
         }
         public async void CheckAuth()
@@ -171,7 +214,7 @@ namespace Umbrella.ViewModel
 
                 if (access.Data.ContainsKey("name"))
                 {
-                    UpdateTitle?.Invoke("Лицензия для " + access.Data["name"]);
+                    UpdateTitle?.Invoke($"Версия: {Version}, Лицензия для {access.Data["name"]}");
                 }
 
                 if (dd && bb == false)
@@ -204,7 +247,7 @@ namespace Umbrella.ViewModel
             }
             catch (Exception e)
             {
-                MessageBox.Show("CheckAuth: " + e.Message);
+                Log.Write(Log.Level.Error, "CheckAuth: " + e.Message);
             }
         }
         public ICommand Exit => ReactiveCommand.Create(() =>
@@ -217,7 +260,7 @@ namespace Umbrella.ViewModel
             }
             catch (Exception e)
             {
-                MessageBox.Show("Exit: " + e.Message);
+                Log.Write(Log.Level.Error, "Exit: " + e.Message);
             }
         });
         public string ActivationStatus { get; set; }
@@ -274,6 +317,8 @@ namespace Umbrella.ViewModel
 
                             _activation.Elapsed += ActivationOnElapsed;
                             _activation.Start();
+                            Log.Write(Log.Level.Info, "Activation start");
+
                         }
                         else
                         {
@@ -289,36 +334,51 @@ namespace Umbrella.ViewModel
             }
             catch (Exception e)
             {
-                MessageBox.Show("Activation: " + e.Message);
+                Log.Write(Log.Level.Error, "Activation: " + e.Message);
             }
         }
+
         private bool _reActivate;
         public ICommand ActivationState => ReactiveCommand.Create(() =>
         {
+
             try
             {
-                _reActivate = false;
-                ActivationIndex = 0;
-                CheckAuth();
-
-                if (UserData.IsActive)
-                {
-                    ActivationStatus = "Промокод уже активирован";
-                    return;
-                }
-
-                if (_activation != null && _activation.Enabled ||
-                    ActivationThread != null && ActivationThread.IsCompleted)
+                if (_activation != null && _activation.Enabled || ActivationThread != null && ActivationThread.IsCompleted)
                 {
                     StopActivation();
                     return;
                 }
 
-                Activation();
+                if (!Settings.Default.CompareDateTable)
+                {
+                    _activation = new System.Timers.Timer { Interval = 1000 };
+                    _activation.Elapsed += ActivationOnElapsed;
+                    _activation.Start();
+                    ActivationStateText = "Остановить активацию";
+
+                }
+                else 
+                {
+
+                    _reActivate = false;
+                    ActivationIndex = 0;
+                    CheckAuth();
+
+                    if (UserData.IsActive)
+                    {
+                        ActivationStatus = "Промокод уже активирован";
+                        return;
+                    }
+
+                    Activation();
+
+                }
+
             }
             catch (Exception e)
             {
-                MessageBox.Show("ActivationState: " + e.Message);
+                Log.Write(Log.Level.Error, "ActivationState: " + e.Message);
             }
         });
         private async void ActivationOnElapsed(object sender, ElapsedEventArgs e)
@@ -337,7 +397,7 @@ namespace Umbrella.ViewModel
                 var resultClear = ((string) result.Data["html"]?["content"])?.Replace("\t", "").Replace("\n", "");
 
                 var key = Regex.Match(resultClear ?? string.Empty,
-                    "<div class=\"gamePromocode\"><div class=\"gamePromocodeItem gamePromocode--promocode is-not-activated\">(.+?)</div>",
+                    "<div class=\"gamePromocode\"><div class=\"gamePromocodeItem gamePromocode--promocode is-activated\">(.+?)</div>",
                     RegexOptions.IgnoreCase).Groups[1].Value;
 
                 if (key != "")
@@ -386,22 +446,25 @@ namespace Umbrella.ViewModel
                 }
 
 
-                if (ActivationIndex > 300)
-                {
-                    StopActivation();
-                }
+                // if (ActivationIndex > 300)
+                // {
+                //     StopActivation();
+                // }
 
                 ActivationIndex++;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("ActivationOnElapsed: " + ex.Message);
+                Log.Write(Log.Level.Error, "ActivationOnElapsed: " + ex.Message);
+
             }
         }
         private void StopActivation(bool withStatus = true)
         {
             try
             {
+                Log.Write(Log.Level.Info, "Activation stop");
+
                 if (_activation != null)
                 {
                     _activation.Stop();
@@ -421,7 +484,7 @@ namespace Umbrella.ViewModel
             }
             catch (Exception e)
             {
-                MessageBox.Show("StopActivation: " + e.Message);
+                Log.Write(Log.Level.Error, "StopActivation: " + e.Message);
             }
         }
     }

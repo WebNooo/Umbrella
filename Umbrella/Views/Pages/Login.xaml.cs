@@ -1,4 +1,8 @@
-﻿using System.Windows.Controls;
+﻿using System;
+using System.Diagnostics;
+using System.Windows;
+using System.Windows.Controls;
+using Microsoft.Win32;
 
 namespace Umbrella.Views.Pages
 {
@@ -11,5 +15,6 @@ namespace Umbrella.Views.Pages
         {
             InitializeComponent();
         }
+
     }
 }

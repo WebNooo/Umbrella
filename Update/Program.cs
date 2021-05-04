@@ -43,7 +43,7 @@ namespace Update
 
             foreach (var file in files)
             {
-                if (!file.Contains("Update.exe") && !file.Contains("update.zip"))
+                if (!file.Contains("Update.exe") && !file.Contains("config.json") && !file.Contains("update.zip"))
                 {
                     File.Delete(file);
                 }

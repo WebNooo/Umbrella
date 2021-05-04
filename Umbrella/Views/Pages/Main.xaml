@@ -72,8 +72,10 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="25"></RowDefinition>
             <RowDefinition Height="25"></RowDefinition>
+            <RowDefinition Height="25"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
             <RowDefinition Height="25"></RowDefinition>
+            <RowDefinition Height="18"></RowDefinition>
             <RowDefinition Height="30"></RowDefinition>
         </Grid.RowDefinitions>
 
@@ -112,7 +114,17 @@
             <Run Text="{Binding EndActivation}"></Run>
         </TextBlock>
 
-        <Grid Row="2">
+        <TextBlock Grid.Row="2" VerticalAlignment="Center" Margin="10 0">
+            <Run Text="Промо: (Всего: "></Run>
+            <Run Foreground="DodgerBlue" Text="{Binding PromocodeCount}"></Run>
+            <Run Text="), (Активировано: "></Run>
+            <Run Foreground="Red" Text="{Binding PromocodeAlreadyActive}"></Run>
+            <Run Text="), (Доступно: "></Run>
+            <Run Foreground="Green" Text="{Binding PromocodeBecameCount}"></Run>
+            <Run Text=")"></Run>
+        </TextBlock>
+
+        <Grid Row="3">
 
             <ItemsControl ItemsSource="{Binding SomeCollection}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                 <ItemsControl.ItemsPanel>
@@ -138,12 +150,17 @@
 
         </Grid>
 
-        <TextBlock Grid.Row="3" VerticalAlignment="Center">
+        <TextBlock Grid.Row="4" VerticalAlignment="Center">
             <Run Text=" Состояние активации: "></Run>
             <Run Text="{Binding ActivationStatus}"></Run>
         </TextBlock>
 
-        <Grid Row="4">
+
+        <CheckBox Grid.Row="5" IsChecked="{Binding CompareDateTable}">Активировать по таблице времени?</CheckBox>
+    
+
+        <Grid Row="6">
+            <CheckBox IsChecked="{Binding CompareDateTable}">Test</CheckBox>
             <Button Content="{Binding ActivationStateText}" Command="{Binding ActivationState}"/>
         </Grid>
         

@@ -35,6 +35,10 @@ namespace Umbrella.ViewModel
                 {
                     try
                     {
+
+
+
+
                         var resultDotaCheat = await RequestManager.SendPost(RequestManager.Api.DotaCheat, "auth",
                             new Dictionary<string, string>
                                 {{"username", Username}, {"password", Password}});
